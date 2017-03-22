@@ -6,6 +6,20 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		F0546DE71E82673000B2645C /* ZipArchive-iOS-fat */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = F0546DE81E82673000B2645C /* Build configuration list for PBXAggregateTarget "ZipArchive-iOS-fat" */;
+			buildPhases = (
+				F0546DEB1E82674100B2645C /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = "ZipArchive-iOS-fat";
+			productName = "ZipArchive-iOS-fat";
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		01DB08731D88095600D335B9 /* SSZipCommon.h in Headers */ = {isa = PBXBuildFile; fileRef = 389869341D5BC30100F18782 /* SSZipCommon.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		389869351D5BC30100F18782 /* SSZipCommon.h in Headers */ = {isa = PBXBuildFile; fileRef = 389869341D5BC30100F18782 /* SSZipCommon.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -330,7 +344,14 @@
 					};
 					B423AE191C0DF76A0004A2F1 = {
 						CreatedOnToolsVersion = 7.1.1;
+						DevelopmentTeam = 984L9QX9X5;
 						LastSwiftMigration = 0820;
+						ProvisioningStyle = Automatic;
+					};
+					F0546DE71E82673000B2645C = {
+						CreatedOnToolsVersion = 8.2.1;
+						DevelopmentTeam = 984L9QX9X5;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -348,6 +369,7 @@
 			targets = (
 				B423AE191C0DF76A0004A2F1 /* ZipArchive-iOS */,
 				AFF75A231C37279600F450AC /* ZipArchive-Mac */,
+				F0546DE71E82673000B2645C /* ZipArchive-iOS-fat */,
 			);
 		};
 /* End PBXProject section */
@@ -368,6 +390,22 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		F0546DEB1E82674100B2645C /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Merge Script\n\n# 1\n# Set bash script to exit immediately if any commands fail.\nset -e\n\n# 2\n# Setup some constants for use later on.\nFRAMEWORK_TARGET_NAME=\"ZipArchive-iOS\"\nFRAMEWORK_SCHEME_NAME=\"ZipArchive-iOS\"\nFRAMEWORK_NAME=\"ZipArchive\"\n\n# 3\n# If remnants from a previous build exist, delete them.\nxcodebuild -target \"${FRAMEWORK_TARGET_NAME}\" clean\nrm -rf \"${BUILD_DIR}/Debug-iphoneos/${FRAMEWORK_NAME}.framework\"\nrm -rf \"${BUILD_DIR}/Debug-iphoneos/${FRAMEWORK_NAME}.framework.dSYM\"\nrm -rf \"${BUILD_DIR}/Debug-iphonesimulator/${FRAMEWORK_NAME}.framework\"\nrm -rf \"${BUILD_DIR}/Debug-iphonesimulator/${FRAMEWORK_NAME}.framework.dSYM\"\nrm -rf \"${BUILD_DIR}/Release-iphoneos/${FRAMEWORK_NAME}.framework\"\nrm -rf \"${BUILD_DIR}/Release-iphoneos/${FRAMEWORK_NAME}.framework.dSYM\"\nrm -rf \"${BUILD_DIR}/Release-iphonesimulator/${FRAMEWORK_NAME}.framework\"\nrm -rf \"${BUILD_DIR}/Release-iphonesimulator/${FRAMEWORK_NAME}.framework.dSYM\"\n\n# 4\n# Build the framework for device and for simulator (using\n# all needed architectures).\n\nxcodebuild -target \"${FRAMEWORK_TARGET_NAME}\" -configuration Release -arch arm64 -arch armv7 -arch armv7s only_active_arch=no defines_module=yes -sdk \"iphoneos\" -scheme \"${FRAMEWORK_SCHEME_NAME}\" -derivedDataPath \"${BUILD_DIR}/../..\" OTHER_CFLAGS=\"-fembed-bitcode\" OTHER_LDFLAGS=\"-fembed-bitcode\" BITCODE_GENERATION_MODE=bitcode\n\nxcodebuild -target \"${FRAMEWORK_TARGET_NAME}\" -configuration Release -arch x86_64 -arch i386 only_active_arch=no defines_module=yes -sdk \"iphonesimulator\" -scheme \"${FRAMEWORK_SCHEME_NAME}\" -derivedDataPath \"${BUILD_DIR}/../..\"\n\n# 5\n# Remove .framework file if exists on Desktop from previous run.\nif [ -d \"${HOME}/Desktop/${FRAMEWORK_NAME}.framework\" ]; then\nrm -rf \"${HOME}/Desktop/${FRAMEWORK_NAME}.framework\"\nfi\n\n# 6\n# Copy the device version of framework to Desktop.\ncp -r \"${BUILD_DIR}/Release-iphoneos/${FRAMEWORK_NAME}.framework\" \"${HOME}/Desktop/${FRAMEWORK_NAME}.framework\"\n\n# 7\n# Replace the framework executable within the framework with\n# a new version created by merging the device and simulator\n# frameworks' executables with lipo.\nlipo -create -output \"${HOME}/Desktop/${FRAMEWORK_NAME}.framework/${FRAMEWORK_NAME}\" \"${BUILD_DIR}/Release-iphoneos/${FRAMEWORK_NAME}.framework/${FRAMEWORK_NAME}\" \"${BUILD_DIR}/Release-iphonesimulator/${FRAMEWORK_NAME}.framework/${FRAMEWORK_NAME}\"\n\n# 8\n# Copy the Swift module mappings for the simulator into the\n# framework.  The device mappings already exist from step 6.\ncp -r \"${BUILD_DIR}/Release-iphonesimulator/${FRAMEWORK_NAME}.framework/Modules/${FRAMEWORK_NAME}.swiftmodule/\" \"${HOME}/Desktop/${FRAMEWORK_NAME}.framework/Modules/${FRAMEWORK_NAME}.swiftmodule\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		AFF75A1F1C37279600F450AC /* Sources */ = {
@@ -559,8 +597,9 @@
 				BITCODE_GENERATION_MODE = marker;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 984L9QX9X5;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -568,7 +607,7 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.samsoffes.ZipArchive;
+				PRODUCT_BUNDLE_IDENTIFIER = co.gongzh.ZipArchive;
 				PRODUCT_NAME = "$(PROJECT_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -583,8 +622,9 @@
 				BITCODE_GENERATION_MODE = bitcode;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "";
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				DEFINES_MODULE = YES;
+				DEVELOPMENT_TEAM = 984L9QX9X5;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
@@ -592,10 +632,26 @@
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
-				PRODUCT_BUNDLE_IDENTIFIER = com.samsoffes.ZipArchive;
+				PRODUCT_BUNDLE_IDENTIFIER = co.gongzh.ZipArchive;
 				PRODUCT_NAME = "$(PROJECT_NAME)";
 				SKIP_INSTALL = YES;
 				SWIFT_VERSION = 3.0;
+			};
+			name = Release;
+		};
+		F0546DE91E82673000B2645C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEVELOPMENT_TEAM = 984L9QX9X5;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		F0546DEA1E82673000B2645C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEVELOPMENT_TEAM = 984L9QX9X5;
+				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
 		};
@@ -628,6 +684,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		F0546DE81E82673000B2645C /* Build configuration list for PBXAggregateTarget "ZipArchive-iOS-fat" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				F0546DE91E82673000B2645C /* Debug */,
+				F0546DEA1E82673000B2645C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 /* End XCConfigurationList section */
 	};
